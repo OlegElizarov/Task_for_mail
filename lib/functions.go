@@ -11,7 +11,7 @@ func NumberInFile(path string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	re := regexp.MustCompile(`(^| |\n)Go(\n| |$)`)
+	re := regexp.MustCompile(`(^| |\n|\W)Go(\n| |$|\W)`)
 	return len(re.FindAll(dat, -1)), nil
 	//return strings.Count(string(dat), "Go"), nil
 }
@@ -26,7 +26,7 @@ func NumberInURL(url string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	re := regexp.MustCompile(`(^| |\n)Go(\n| |$)`)
+	re := regexp.MustCompile(`(^| |\n|\W)Go(\n| |$|\W)`)
 	return len(re.FindAll(body, -1)), nil
 	//return strings.Count(string(body), "Go"), nil
 }

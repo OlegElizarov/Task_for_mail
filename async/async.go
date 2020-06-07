@@ -7,36 +7,48 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"runtime"
 	_ "runtime"
 	"sync"
 )
 
-func Definer(str string, ch chan int, group *sync.WaitGroup) {
+//import _ "net/http/pprof"
+//import _ "net/http"
+
+const MAX_GOR = 4 //total count of goroutines is MAX_GOR+1(func main is goroutine too)
+
+func Definer(str string, ch chan int, job chan struct{}, group *sync.WaitGroup) {
 	defer group.Done()
+
 	if matchedURL, _ := regexp.MatchString(`^http.`, str); matchedURL {
 		//handle URL
 		val, err := lib.NumberInURL(str)
 		if err != nil {
-			fmt.Print(err)
-			close(ch)
+			log.Print(err)
+			<-job
 			return
 		}
-		fmt.Println(str, " URL ", val)
+		fmt.Printf("Count for %s : %v\n", str, val)
 		ch <- val
+		<-job
 		return
 	}
 	if matchedFile, _ := regexp.MatchString(`^(.+)/([^/]+)$`, str); matchedFile {
 		//handle File
 		val, err := lib.NumberInFile(str)
 		if err != nil {
-			fmt.Print(err)
-			close(ch)
+			log.Print(err)
+			<-job
 			return
 		}
-		fmt.Println(str, " File ", val)
+		fmt.Printf("Count for %s : %v\n", str, val)
 		ch <- val
+		<-job
 		return
 	}
+	//handle not file and not URL
+	log.Print("Wrong input param")
+	<-job
 	return
 }
 
@@ -49,20 +61,25 @@ func main() {
 	if scanner.Err() != nil {
 		log.Print(scanner.Err())
 	}
-	//input = append(input, "./test.txt", "./try.txt")
-	ch := make(chan int, len(input))
+	ch := make(chan int, len(input))    //chan of results
+	job := make(chan struct{}, MAX_GOR) //chan for goroutine limit
+
 	sum := 0
 	var wg sync.WaitGroup
 	wg.Add(len(input))
 
 	for _, val := range input {
-		go Definer(val, ch, &wg)
+		select {
+		case job <- struct{}{}:
+			go Definer(val, ch, job, &wg)
+			fmt.Println(" Gor numb ", runtime.NumGoroutine())
+		}
 	}
-	//fmt.Println(runtime.NumGoroutine())
 	wg.Wait()
 	close(ch)
+
 	for v := range ch {
 		sum += v
 	}
-	fmt.Println(sum)
+	fmt.Printf("Total: %v\n", sum)
 }

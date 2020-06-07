@@ -13,23 +13,26 @@ import (
 func Definer(str string) (int, error) {
 	if matchedURL, _ := regexp.MatchString(`^http.`, str); matchedURL {
 		//handle URL
-		fmt.Print(" URL ")
 		val, err := lib.NumberInURL(str)
 		if err != nil {
+			log.Print(err)
 			return 0, err
 		}
+		fmt.Printf("Count for %s : %v\n", str, val)
 		return val, nil
 	}
 	if matchedFile, _ := regexp.MatchString(`^(.+)/([^/]+)$`, str); matchedFile {
 		//handle File
-		fmt.Print(" File ")
 		val, err := lib.NumberInFile(str)
 		if err != nil {
+			log.Print(err)
 			return 0, err
 		}
+		fmt.Printf("Count for %s : %v\n", str, val)
 		return val, nil
 	}
-	return 0, nil
+	log.Print("Wrong input param")
+	return 0, errors.New("Wrong input param")
 }
 
 func main() {
@@ -46,13 +49,11 @@ func main() {
 	for ind, val := range input {
 		fmt.Print(ind, " : ", val)
 		val, err := Definer(val)
-		if err != nil && err != errors.New("Bad input param") {
+		if err != nil {
 			log.Println(err)
-			return
+			val = 0
 		}
-		fmt.Println(val)
 		sum += val
 	}
-
-	fmt.Println(sum)
+	fmt.Printf("Total: %v\n", sum)
 }
