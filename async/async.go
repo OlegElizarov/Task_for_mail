@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"runtime"
 	_ "runtime"
 	"sync"
 )
@@ -15,7 +14,7 @@ import (
 //import _ "net/http/pprof"
 //import _ "net/http"
 
-const MAX_GOR = 4 //total count of goroutines is MAX_GOR+1(func main is goroutine too)
+const MAX_GOR = 5 //total count of goroutines is MAX_GOR+1(func main is goroutine too)
 
 func Definer(str string, ch chan int, job chan struct{}, group *sync.WaitGroup) {
 	defer group.Done()
@@ -72,7 +71,7 @@ func main() {
 		select {
 		case job <- struct{}{}:
 			go Definer(val, ch, job, &wg)
-			fmt.Println(" Gor numb ", runtime.NumGoroutine())
+			//fmt.Println(" Gor numb ", runtime.NumGoroutine())
 		}
 	}
 	wg.Wait()
